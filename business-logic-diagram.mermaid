@@ -1,0 +1,100 @@
+classDiagram
+    %% Core Domain Entities
+    class Element {
+        +ID int
+        +NomLatin string
+        +Description string
+        +SousCategorieID int
+        +GetNomCommuns() : string[]
+        +GetImages() : Image[]
+        +Validate() : error
+    }
+
+    class Category {
+        +ID int
+        +Nom string
+        +ParentID int
+        +GetChildren() : Category[]
+        +GetElements() : Element[]
+    }
+
+    class Quiz {
+        +ID int
+        +UserID int
+        +Questions Question[]
+        +StartTime DateTime
+        +EndTime DateTime
+        +Status QuizStatus
+        +CalculateScore() : int
+        +IsComplete() : bool
+        +TimeRemaining() : Duration
+    }
+
+    class Question {
+        +ID int
+        +QuizID int
+        +ElementID int
+        +ImageID int
+        +Type QuestionType
+        +Points int
+        +UserAnswer string
+        +IsCorrect() : bool
+        +ValidateAnswer(answer string) : bool
+    }
+
+    %% Services
+    class QuizService {
+        -quizRepo QuizRepository
+        -elementRepo ElementRepository
+        -imageRepo ImageRepository
+        +CreateQuiz(params QuizParams) : Quiz
+        +SubmitAnswer(quizID int, answer string) : Result
+        +GetQuizResults(quizID int) : QuizResult
+    }
+
+    class ElementService {
+        -elementRepo ElementRepository
+        -categoryRepo CategoryRepository
+        -imageRepo ImageRepository
+        +CreateElement(element Element) : error
+        +UpdateElement(element Element) : error
+        +DeleteElement(id int) : error
+        +SearchElements(criteria SearchCriteria) : Element[]
+    }
+
+    class ImageService {
+        -imageStorage ImageStorage
+        -imageRepo ImageRepository
+        +UploadImage(image bytes, metadata ImageMetadata) : error
+        +GetImage(id int) : Image
+        +DeleteImage(id int) : error
+    }
+
+    %% Value Objects
+    class ImageMetadata {
+        +ElementID int
+        +Difficulty DifficulteType
+        +Type ImageType
+        +Format string
+        +Size int
+        +Validate() : error
+    }
+
+    class SearchCriteria {
+        +CategoryID int
+        +Difficulty DifficulteType
+        +SearchTerm string
+        +Limit int
+        +Offset int
+        +Validate() : error
+    }
+
+    %% Relations
+    Quiz "1" *-- "many" Question
+    Element "1" *-- "many" Image
+    Category "1" *-- "many" Element
+    QuizService --> Quiz : manages
+    ElementService --> Element : manages
+    ImageService --> ImageMetadata : uses
+    QuizService --> Question : creates
+    ElementService --> SearchCriteria : uses

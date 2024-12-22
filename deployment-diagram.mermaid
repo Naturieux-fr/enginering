@@ -1,0 +1,42 @@
+classDiagram
+    class LoadBalancer {
+        +DistributeTraffic()
+        +HealthCheck()
+    }
+
+    class APIServer {
+        +ProcessRequests()
+        +HandleConnections()
+    }
+
+    class DatabaseCluster {
+        +Master Database
+        +Replica Databases
+        +HandleReplication()
+    }
+
+    class CacheCluster {
+        +Redis Primary
+        +Redis Secondary
+        +HandleFailover()
+    }
+
+    class StorageService {
+        +Object Storage
+        +CDN Integration
+        +HandleImageDelivery()
+    }
+
+    class MonitoringSystem {
+        +Metrics Collection
+        +AlertingSystem
+        +LogAggregation
+    }
+
+    LoadBalancer --> APIServer : routes
+    APIServer --> DatabaseCluster : persists
+    APIServer --> CacheCluster : caches
+    APIServer --> StorageService : stores
+    MonitoringSystem --> APIServer : monitors
+    MonitoringSystem --> DatabaseCluster : monitors
+    MonitoringSystem --> CacheCluster : monitors

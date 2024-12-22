@@ -1,0 +1,101 @@
+classDiagram
+    %% Interfaces API
+    class QuizController {
+        <<interface>>
+        +GenerateQuiz(params QuizParams) : Quiz
+        +SubmitAnswer(quizID int, answer string) : Result
+        +GetQuizHistory(userID int) : QuizHistory[]
+    }
+
+    class ElementController {
+        <<interface>>
+        +GetElements(filter ElementFilter) : Element[]
+        +CreateElement(element Element) : error
+        +UpdateElement(element Element) : error
+        +DeleteElement(id int) : error
+    }
+
+    %% DTOs
+    class QuizParams {
+        +Difficulty DifficulteType
+        +CategoryID int
+        +NumberOfQuestions int
+    }
+
+    class QuizResult {
+        +Score int
+        +CorrectAnswers int
+        +TotalQuestions int
+        +TimeTaken Duration
+    }
+
+    class ElementFilter {
+        +CategoryID int
+        +Difficulty DifficulteType
+        +SearchTerm string
+    }
+
+    %% Infrastructure
+    class PostgresRepository {
+        -db *sql.DB
+        +ExecuteQuery(query string) : Result
+        +BeginTransaction() : Transaction
+    }
+
+    class RedisCache {
+        -client RedisClient
+        +Get(key string) : interface
+        +Set(key string, value interface, exp Duration) : error
+    }
+
+    class ImageStorage {
+        -bucket string
+        +StoreImage(image bytes, path string) : error
+        +GetImage(path string) : bytes
+        +DeleteImage(path string) : error
+    }
+
+    %% Middleware
+    class AuthMiddleware {
+        +Authenticate(next Handler) : Handler
+        +RequireRole(roles string[]) : Middleware
+    }
+
+    class LoggerMiddleware {
+        +Log(next Handler) : Handler
+    }
+
+    %% Relations
+    QuizController --> QuizService : uses
+    ElementController --> ElementService : uses
+    PostgresRepository ..|> ElementRepository : implements
+    PostgresRepository ..|> CategoryRepository : implements
+    PostgresRepository ..|> ImageRepository : implements
+    QuizService --> RedisCache : uses
+    ImageStorage --> QuizService : uses
+    AuthMiddleware --> QuizController : protects
+    LoggerMiddleware --> QuizController : logs
+
+    %% Interfaces infrastructure
+    class ElementRepository {
+        <<interface>>
+        +FindById(id int) : Element
+        +Save(element Element) : error
+        +Delete(id int) : error
+        +FindAll(filter Filter) : Element[]
+    }
+
+    class CategoryRepository {
+        <<interface>>
+        +FindById(id int) : Category 
+        +Save(category Category) : error
+        +Delete(id int) : error
+        +FindAll() : Category[]
+    }
+
+    class ImageRepository {
+        <<interface>>
+        +FindByElementId(elementId int) : Image[]
+        +Save(image Image) : error
+        +Delete(id int) : error
+    }

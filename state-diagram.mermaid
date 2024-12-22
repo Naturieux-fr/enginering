@@ -1,0 +1,18 @@
+stateDiagram-v2
+    [*] --> Created: Quiz Generated
+    Created --> InProgress: User Starts
+    InProgress --> OnHold: User Pauses
+    OnHold --> InProgress: User Resumes
+    InProgress --> Completed: All Questions Answered
+    InProgress --> Abandoned: User Abandons
+    OnHold --> Abandoned: Session Expired
+    Completed --> [*]: Results Saved
+    Abandoned --> [*]: Session Cleared
+
+    state InProgress {
+        [*] --> QuestionDisplay
+        QuestionDisplay --> AnswerSubmitted
+        AnswerSubmitted --> FeedbackShown
+        FeedbackShown --> QuestionDisplay: Next Question
+        FeedbackShown --> [*]: Last Question
+    }

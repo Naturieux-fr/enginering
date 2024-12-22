@@ -1,0 +1,41 @@
+classDiagram
+    class cmd {
+        main.go
+        server.go
+    }
+
+    class api {
+        routes.go
+        handlers/
+        middleware/
+    }
+
+    class domain {
+        entities/
+        repositories/
+        services/
+    }
+
+    class infrastructure {
+        postgres/
+        redis/
+        storage/
+    }
+
+    class config {
+        config.go
+        env.go
+    }
+
+    class pkg {
+        logger/
+        validator/
+        errors/
+    }
+
+    cmd --> api : uses
+    api --> domain : depends
+    domain --> infrastructure : implements
+    infrastructure --> config : uses
+    api --> pkg : uses
+    domain --> pkg : uses

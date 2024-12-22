@@ -1,0 +1,43 @@
+sequenceDiagram
+    actor User
+    participant API as QuizController
+    participant QS as QuizService
+    participant ES as ElementService
+    participant Cache as RedisCache
+    participant DB as PostgresDB
+
+    %% Génération du quiz
+    User->>+API: GenerateQuiz(params)
+    API->>+QS: GenerateQuiz(difficulty, category)
+    QS->>+ES: GetRandomElements(criteria)
+    ES->>+DB: QueryElements(filter)
+    DB-->>-ES: Elements[]
+    ES-->>-QS: Elements[]
+    QS->>+Cache: StoreQuizSession(quiz)
+    Cache-->>-QS: SessionID
+    QS-->>-API: Quiz
+    API-->>-User: Quiz Questions
+
+    %% Boucle de réponses
+    rect rgb(20, 20, 20)
+        Note over User,DB: Pour chaque question
+        User->>+API: SubmitAnswer(quizId, answer)
+        API->>+QS: ValidateAnswer(quizId, answer)
+        QS->>+Cache: GetQuizSession(quizId)
+        Cache-->>-QS: QuizSession
+        QS->>QS: ValidateAnswer()
+        QS->>+DB: SaveAnswer(answer)
+        DB-->>-QS: OK
+        QS-->>-API: ValidationResult
+        API-->>-User: Feedback
+    end
+
+    %% Finalisation du quiz
+    User->>+API: FinalizeQuiz(quizId)
+    API->>+QS: CompleteQuiz(quizId)
+    QS->>+DB: SaveQuizResults(results)
+    DB-->>-QS: OK
+    QS->>+Cache: DeleteSession(quizId)
+    Cache-->>-QS: OK
+    QS-->>-API: FinalScore
+    API-->>-User: QuizResults

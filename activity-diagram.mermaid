@@ -1,0 +1,15 @@
+stateDiagram-v2
+    [*] --> ValidateInput: User submits answer
+    ValidateInput --> CheckQuizStatus: Input valid
+    ValidateInput --> Error: Input invalid
+    CheckQuizStatus --> CheckTimeout: Quiz active
+    CheckQuizStatus --> Error: Quiz inactive
+    CheckTimeout --> CompareAnswer: Within time limit
+    CheckTimeout --> Error: Time exceeded
+    CompareAnswer --> CalculateScore: Answer correct
+    CompareAnswer --> RecordIncorrect: Answer incorrect
+    CalculateScore --> UpdateProgress
+    RecordIncorrect --> UpdateProgress
+    UpdateProgress --> SaveResults
+    SaveResults --> [*]
+    Error --> [*]

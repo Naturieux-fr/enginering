@@ -1,0 +1,109 @@
+classDiagram
+    %% Entités du domaine
+    class Element {
+        +ID int
+        +NomLatin string
+        +Description string
+        +GetNomCommuns() []string
+        +GetImages() []Image
+    }
+
+    class MainCategory {
+        +ID int
+        +Nom string
+        +GetSousCategories() []SubCategory
+    }
+
+    class SubCategory {
+        +ID int
+        +MainCategoryID int
+        +GetElements() []Element
+    }
+
+    class Image {
+        +ID int
+        +ElementID int
+        +CheminImage string
+        +Difficulte DifficulteType
+        +TypeImage ImageType
+    }
+
+    class NomCommun {
+        +ID int
+        +ElementID int
+        +Nom string
+    }
+
+    %% Interfaces Repository
+    class ElementRepository {
+        <<interface>>
+        +Create(element Element) error
+        +GetByID(id int) (Element, error)
+        +Update(element Element) error
+        +Delete(id int) error
+        +List(filter ElementFilter) []Element
+    }
+
+    class CategoryRepository {
+        <<interface>>
+        +GetMainCategories() []MainCategory
+        +GetSubCategories(mainCategoryID int) []SubCategory
+        +CreateCategory(category MainCategory) error
+        +CreateSubCategory(subCategory SubCategory) error
+    }
+
+    class ImageRepository {
+        <<interface>>
+        +GetImagesByElement(elementID int) []Image
+        +AddImage(image Image) error
+        +UpdateImage(image Image) error
+        +DeleteImage(id int) error
+    }
+
+    %% Services
+    class ElementService {
+        -elementRepo ElementRepository
+        -imageRepo ImageRepository
+        +CreateElement(element Element) error
+        +GetElement(id int) Element
+        +UpdateElement(element Element) error
+        +DeleteElement(id int) error
+        +SearchElements(criteria SearchCriteria) []Element
+    }
+
+    class QuizService {
+        -elementRepo ElementRepository
+        -imageRepo ImageRepository
+        +GenerateQuiz(difficulty DifficulteType, categoryID int) Quiz
+        +ValidateAnswer(quizID int, answer string) bool
+        +GetQuizResults(quizID int) QuizResult
+    }
+
+    %% Classes utilitaires
+    class Quiz {
+        +ID int
+        +Questions []Question
+        +Difficulty DifficulteType
+        +StartTime time.Time
+        +EndTime time.Time
+    }
+
+    class Question {
+        +ID int
+        +ElementID int
+        +ImageID int
+        +Type QuestionType
+        +Points int
+        +ValidateAnswer(answer string) bool
+    }
+
+    %% Relations
+    Element "1" --* "*" NomCommun
+    Element "1" --* "*" Image
+    MainCategory "1" --* "*" SubCategory
+    SubCategory "1" --* "*" Element
+    ElementService --> ElementRepository
+    ElementService --> ImageRepository
+    QuizService --> ElementRepository
+    QuizService --> ImageRepository
+    Quiz "1" --* "*" Question

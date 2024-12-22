@@ -1,0 +1,38 @@
+sequenceDiagram
+    actor User
+    participant API as AuthController
+    participant AS as AuthService
+    participant US as UserService
+    participant DB as PostgresDB
+    participant Cache as RedisCache
+
+    %% Login Flow
+    User->>+API: Login(email, password)
+    API->>+AS: Authenticate(credentials)
+    AS->>+US: ValidateCredentials(email, password)
+    US->>+DB: GetUserByEmail(email)
+    DB-->>-US: UserData
+    US->>US: VerifyPassword()
+    US-->>-AS: User
+    AS->>AS: GenerateJWT()
+    AS->>+Cache: StoreSession(token)
+    Cache-->>-AS: OK
+    AS-->>-API: AuthToken
+    API-->>-User: Token + UserData
+
+    %% Protected Route Access
+    User->>+API: AccessProtectedRoute(token)
+    API->>+AS: ValidateToken(token)
+    AS->>+Cache: CheckSession(token)
+    Cache-->>-AS: Valid
+    AS-->>-API: Authorized
+    API->>API: ProcessRequest
+    API-->>-User: Response
+
+    %% Logout Flow
+    User->>+API: Logout(token)
+    API->>+AS: InvalidateSession(token)
+    AS->>+Cache: DeleteSession(token)
+    Cache-->>-AS: OK
+    AS-->>-API: Success
+    API-->>-User: LoggedOut
